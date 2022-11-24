@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<!-- 原作者：van Bruggen-->
+<html>
+    <style>
+        body {
+            background-color: black;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            position: absolute;
+            margin: 0;
+            padding: 0;
+        }
+        #player {
+            height: 100%;
+            width: 100%;
+        }
+        .ytp-gradient-bottom {display: none;}
+        .ytp-gradient-top {display: none;}
+        .ytp-endscreen-content {display: none;}
+    </style>
+    <script>
+        let tag = document.createElement("script");
+        tag.src = "https://www.youtube.com/iframe_api";
+        let firstScriptTag = document.getElementsByTagName("script")[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        let player;
+        let id = "";
+        let highestQuality = "highres";
+
+        //YouTube 嵌入式播放器 API: https://developers.google.com/youtube/iframe_api_reference?hl=zh-cn
+        //OBS Studio JavaScript API: https://github.com/obsproject/obs-browser#control-obs
+
+        function onYouTubeIframeAPIReady() {
+            id = window.location.search.substring(1);
+            if (!window.obsstudio) {
+                alert("请在OBS中打开！");
+                return;
+            }
+            window.obsstudio.getControlLevel(function (level) {
+                if (level != 5) {
+                    alert("权限不足，无法自动停止推流。\n请在浏览器源的属性中\n将页面权限设置为“OBS的完全访问权限”。");
+                }
+            });
+            if (id == "") {
+                alert("未提供视频ID，请按格式在浏览器源中输入URL：\nfile://" + decodeURI(location.pathname) + "?视频ID\n（请勿勾选“本地文件”）")
+                return;
+            }
+            validVideoId(id).then(isValid => {
+                if (isValid)
+                    createPlayer(id);
+                else
+                    alert("ID对应的视频不存在或输入有误。");
+            })
+        }
+
+        function createPlayer(videoId) {
+            player = new YT.Player("player", {
+            videoId: videoId,
+            playerVars: { 'autoplay': 1, 'controls': 1, 'rel': 0 , 'modestbranding': 1, 'fs': 0},
+            events: {
+                onReady: onPlayerReady,
+                onStateChange: onPlayerStateChange,
+                onPlaybackQualityChange: onPlaybackQualityChange,
+            },
+            });
+        }
+
+        function onPlayerReady(event) {
+            player.setPlaybackQuality(highestQuality);
+            event.target.playVideo();
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data == YT.PlayerState.ENDED) {
+                window.obsstudio.stopStreaming();
+            }
+        }
+
+        function onPlaybackQualityChange(event) {
+            player.setPlaybackQuality(highestQuality);
+        }
+
+        async function validVideoId(videoId) {
+            let img;
+            const imageLoad = new Promise(resolve => {
+                img = new Image();
+                img.onload = resolve;
+                img.src = "https://img.youtube.com/vi/" + videoId + "/mqdefault.jpg";
+            });
+            await imageLoad;
+            return img.width != 120;
+        }
+    </script>
+    <body>
+        <div id="player"></div>
+    </body>
+</html>
