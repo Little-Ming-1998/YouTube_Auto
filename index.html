@@ -48,7 +48,7 @@
                 }
             });
             if (id == "") {
-                alert("未提供视频ID，请按格式在浏览器源中输入URL：\nfile://" + decodeURI(location.pathname) + "?视频ID\n（请勿勾选“本地文件”）")
+                alert(`未提供视频ID，请按格式在浏览器源中输入URL之后添加“?<VIDEO_ID>”\n（请勿勾选“本地文件”）`)
                 return;
             }
             validVideoId(id).then(isValid => {
