@@ -78,13 +78,13 @@
     window.onload = function get_pl_items() {
         if(pl == undefined || pl == ``)
         {
-            lightyear.notify(`未设置列表`, 'error', 2000);
+            lightyear.notify(`未设置列表`, 'danger', 2000);
             return; 
         }
         //api_key = `xxxx`; //本地密钥 上传至公网前需删除
         if(api_key == undefined || api_key == ``)
         {
-            lightyear.notify(`未设置密钥`, 'error', 2000);
+            lightyear.notify(`未设置密钥`, 'danger', 2000);
             return; 
         }
         $.ajax({
