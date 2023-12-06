@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html meta http-equiv="Content-Type" content="text/html">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Youtube Auto</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="css/style.min.css" rel="stylesheet">
+</head>
+<style>
+    body {
+        background-color: black;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        position: absolute;
+        margin: 0;
+        padding: 0;
+    }
+
+    #player {
+        height: 100%;
+        width: 100%;
+    }
+
+    .ytp-gradient-bottom {
+        display: none;
+    }
+
+    .ytp-gradient-top {
+        display: none;
+    }
+
+    .ytp-endscreen-content {
+        display: none;
+    }
+</style>
+<script src="https://fastly.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+<script script charset="GB2312" language="javascript" type="text/javascript">
+
+    var urlParams;
+    (function () {
+        var match,
+            pl = /\+/g,  // Regex for replacing addition symbol with a space
+            search = /([^&=]+)=?([^&]*)/g,
+            decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+            query = window.location.search.substring(1);
+
+        urlParams = {};
+        while (match = search.exec(query))
+            urlParams[decode(match[1])] = decode(match[2]);
+    })();
+
+
+    let tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+    let firstScriptTag = document.getElementsByTagName("script")[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    let player;
+    let id = "";
+    let highestQuality = "highres";
+    let api_key = ""
+
+
+    //YouTube 嵌入式播放器 API: https://developers.google.com/youtube/iframe_api_reference?hl=zh-cn
+    //OBS Studio JavaScript API: https://github.com/obsproject/obs-browser#control-obs
+
+    id = urlParams["v"];  //视频
+    pl = urlParams["list"]; //列表
+    api_key = urlParam["key"] //密钥
+    let next_link = -1; //链接，播映完毕为-1
+    let pl_items_arr = [];
+    let info_string;
+
+    function get_pl_items() {
+        if(pl == undefined || pl == ``)
+        {
+            lightyear.notify(`未设置列表`, 'error', 2000);
+            return; 
+        }
+        //api_key = `xxxx`; //本地密钥 上传至公网前需删除
+        if(api_key == undefined || api_key == ``)
+        {
+            lightyear.notify(`未设置密钥`, 'error', 2000);
+            return; 
+        }
+        $.ajax({
+            url: `https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&maxResults=50&playlistId=${pl}&key=${api_key}`,
+            type: 'get',
+            datatype: 'json',
+            success: function (data) {
+                data.items.forEach(item => {
+                    //console.log(String(item))
+                    pl_items_arr.push(String(item.contentDetails.videoId));
+                });
+                let index = pl_items_arr.findIndex(item => item == id);
+                if (index == -1) {
+                    next_link = -1; //视频与播放列表不一致
+                    lightyear.notify(`视频与播放列表不一致`, 'danger', 2000);
+                    return;
+                }
+                let next_id;
+                if (index + 1 < pl_items_arr.length) { //未播映完毕
+                    next_id = pl_items_arr[index + 1]; //下一个节目ID
+                    info_string = `稍后播映: ${next_id}`;
+                    next_link = `${window.location.origin}/YTAutoPL.html?v=${next_id}&list=${pl}`;
+                    lightyear.notify(`已读取列表，正在播映 ${id}，集数[${index+1}/${pl_items_arr.length}]，稍后播映 ${next_id}`, 'success', 2000);
+                    return;
+                }
+                if (index + 1 == pl_items_arr.length) { //最后一集
+                    info_string = `Last Episode 本节目已全部播映完毕`;
+                    next_link = -1;
+                    lightyear.notify(`已读取列表，正在播映 ${id}<br>Last Episode 本集是本节目最后一集`, 'success', 2000);
+                }
+                return;
+            }
+        })
+    }
+    get_pl_items();
+
+
+    function onYouTubeIframeAPIReady() {
+        if (!window.obsstudio) {
+            alert("请在OBS中打开！");
+            return;
+        }
+        window.obsstudio.getControlLevel(function (level) {
+            if (level != 5) {
+                alert("权限不足，无法自动停止推流。\n请在浏览器源的属性中\n将页面权限设置为“OBS的完全访问权限”。");
+            }
+        });
+        if (id == "") {
+            alert("未提供视频ID，请按格式在浏览器源中输入URL：\nfile://" + decodeURI(location.pathname) + "?视频ID\n（请勿勾选“本地文件”）")
+            return;
+        }
+        validVideoId(id).then(isValid => {
+            if (isValid)
+                createPlayer(id);
+            else
+                alert('ID对应的视频不存在或输入有误。');
+        })
+    }
+
+    function createPlayer(videoId) {
+        player = new YT.Player("player", {
+            videoId: videoId,
+            playerVars: { 'autoplay': 1, 'controls': 1, 'rel': 0, 'modestbranding': 1, 'fs': 0 },
+            events: {
+                onReady: onPlayerReady,
+                onStateChange: onPlayerStateChange,
+                onPlaybackQualityChange: onPlaybackQualityChange,
+            },
+        });
+    }
+
+    function onPlayerReady(event) {
+        player.setPlaybackQuality(hd720);
+        event.target.playVideo();
+    }
+
+    function onPlayerStateChange(event) {
+        if (event.data == YT.PlayerState.ENDED) {
+            if (next_link == -1) { //播映完毕 停止推流
+                lightyear.notify(`节目播映完毕`, 'danger', 2000);
+                setTimeout(function () {
+                    window.obsstudio.stopStreaming();
+                }, 5000)
+            }
+            else { //继续播映
+                lightyear.notify(`稍后播映 ${next_id}`, 'success', 2000);
+                setTimeout(function () {
+                    window.location.replace(next_link);;
+                }, 5000)
+            }
+            return;
+        }
+    }
+
+    function onPlaybackQualityChange(event) {
+        player.setPlaybackQuality(hd720);
+    }
+
+    async function validVideoId(videoId) {
+        let img;
+        const imageLoad = new Promise(resolve => {
+            img = new Image();
+            img.onload = resolve;
+            img.src = "https://img.youtube.com/vi/" + videoId + "/mqdefault.jpg";
+        });
+        await imageLoad;
+        return img.width != 120;
+    }
+</script>
+<script type="text/javascript" src="http://lyear.itshubao.com/js/jquery.min.js"></script>
+<script type="text/javascript" src="http://lyear.itshubao.com/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="http://lyear.itshubao.com/js/perfect-scrollbar.min.js"></script>
+<!--消息提示-->
+<script src="http://lyear.itshubao.com/js/bootstrap-notify.min.js"></script>
+<script type="text/javascript" src="http://lyear.itshubao.com/js/lightyear.js"></script>
+<script type="text/javascript" src="http://lyear.itshubao.com/js/main.min.js"></script>
+
+<body>
+    <div id="player"></div>
+</body>
+
+</html>
