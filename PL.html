@@ -74,7 +74,7 @@
     let pl_items_arr = [];
     let info_string;
 
-    function get_pl_items() {
+    window.onload = function get_pl_items() {
         if(pl == undefined || pl == ``)
         {
             lightyear.notify(`未设置列表`, 'error', 2000);
@@ -118,7 +118,6 @@
             }
         })
     }
-    get_pl_items();
 
 
     function onYouTubeIframeAPIReady() {
