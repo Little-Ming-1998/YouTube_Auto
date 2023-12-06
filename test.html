@@ -1,5 +1,6 @@
 <!doctype html>
 <html>
+  <meta charset="utf-8" />
   <style>
     body {
       background-color: black;
@@ -40,7 +41,8 @@
       ? urlObj.searchParams.get("id").split(",").filter(Boolean)
       : [];
     const playlist = urlObj.searchParams.get("list") || null;
-    const quality = urlObj.searchParams.get("quality").split("p")[0] || null;
+    let quality = urlObj.searchParams.get("quality");
+    if (quality == null) quality = null.split("p")[0];
 
     //新建嵌入式播放器
     function onYouTubeIframeAPIReady() {
@@ -81,8 +83,8 @@
           onError: onPlayerError,
         },
       });
+      player.index = -1;
       player.lastIndex = -2;
-      player.ready = false;
     }
 
     function onPlayerReady(event) {
@@ -100,22 +102,26 @@
     }
 
     function onPlayerStateChange(event) {
+      const currentIndex = event.target.getPlaylistIndex();
       console.log(event.data);
-      if (event.data == YT.PlayerState.PLAYING) {
-        if (event.target.ready) event.target.iframe.style.display = "block";
-        const currentIndex = event.target.getPlaylistIndex();
+      if (event.data == YT.PlayerState.BUFFERING) {
+        //currentIndex为-1说明列表丢失，重载列表
+        //在缓冲时重载列表，不影响观感
+        if (currentIndex == -1) refreshPlaylist(event.target);
+      } else if (event.data == YT.PlayerState.PLAYING) {
+        event.target.iframe.style.display = "block";
         if (currentIndex !== event.target.lastIndex && quality) {
           //仅在第一次变为PLAYING时改变画质
           event.target.lastIndex = currentIndex;
           autoChangeQuality(event.target.iframe, quality);
         }
       } else if (event.data == YT.PlayerState.UNSTARTED) {
-        if (event.target.ready) event.target.iframe.style.display = "block";
-        else event.target.ready = true;
+        //等待直播开始，这种情况下会丢失列表
+        //记录index以便确认位置
+        if (event.target.index != -1)
+          event.target.iframe.style.display = "block";
+        event.target.index = currentIndex;
       } else if (event.data == YT.PlayerState.ENDED) {
-        // if (event.target.getPlaylistIndex == -1) {
-        //   refreshPlaylist(event.target);
-        // }
         if (
           event.target.getPlaylistIndex() ==
           (event.target.getPlaylist() || []).length - 1
@@ -143,6 +149,15 @@
     }
 
     function refreshPlaylist(player) {
+      if (id.length != 0) {
+        player.loadPlaylist({ playlist: id }, player.index);
+      } else if (playlist) {
+        event.target.loadPlaylist(
+          { list: playlist, listType: "playlist" },
+          player.index,
+        );
+      }
+      player.playVideo();
       //TODO 跳转时可能出现播放列表消失的问题
     }
 
