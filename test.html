@@ -108,14 +108,7 @@
       if (event.data == YT.PlayerState.BUFFERING) {
         //currentIndex为-1说明列表丢失，重载列表
         //在缓冲时重载列表，不影响观感
-        if (currentIndex == -1) 
-        {
-$("#player").hide();
-             refreshPlaylist(event.target);
-              setTimeout(function(){
-      $("#player").fadeIn(500);
-    },1000)
-          }
+        if (currentIndex == -1) refreshPlaylist(event.target);
       } else if (event.data == YT.PlayerState.PLAYING) {
         event.target.iframe.style.display = "block";
         if (currentIndex !== event.target.lastIndex && quality) {
