@@ -110,10 +110,10 @@
         //在缓冲时重载列表，不影响观感
         if (currentIndex == -1) 
         {
-$("player").hide();
+$("#player").hide();
              refreshPlaylist(event.target);
               setTimeout(function(){
-      $("#aa").fadeIn(500);
+      $("#player").fadeIn(500);
     },1000)
           }
       } else if (event.data == YT.PlayerState.PLAYING) {
