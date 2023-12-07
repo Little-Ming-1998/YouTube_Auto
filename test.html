@@ -18,6 +18,7 @@
       display: none;
     }
   </style>
+  <script src="https://fastly.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
   <script script charset="GB2312" language="javascript" type="text/javascript">
 
     //导入YouTube 嵌入式播放器 API
@@ -107,7 +108,14 @@
       if (event.data == YT.PlayerState.BUFFERING) {
         //currentIndex为-1说明列表丢失，重载列表
         //在缓冲时重载列表，不影响观感
-        if (currentIndex == -1) refreshPlaylist(event.target);
+        if (currentIndex == -1) 
+        {
+$("player").hide();
+             refreshPlaylist(event.target);
+              setTimeout(function(){
+      $("#aa").fadeIn(500);
+    },1000)
+          }
       } else if (event.data == YT.PlayerState.PLAYING) {
         event.target.iframe.style.display = "block";
         if (currentIndex !== event.target.lastIndex && quality) {
