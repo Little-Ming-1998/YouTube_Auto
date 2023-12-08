@@ -43,7 +43,7 @@
       : [];
     const playlist = urlObj.searchParams.get("list") || null;
     let quality = urlObj.searchParams.get("quality");
-    if (quality == null) quality = null.split("p")[0];
+    if (quality != null) quality = null.split("p")[0];
 
     //新建嵌入式播放器
     function onYouTubeIframeAPIReady() {
@@ -151,11 +151,10 @@
 
     function refreshPlaylist(player) {
       if (id.length != 0) {
-        player.loadPlaylist({ playlist: id }, player.index);
+        player.loadPlaylist(id, player.index);
       } else if (playlist) {
-        event.target.loadPlaylist(
-          { list: playlist, listType: "playlist" },
-          player.index,
+        player.loadPlaylist(
+          { list: playlist, listType: "playlist", index: player.index }
         );
       }
       player.playVideo();
