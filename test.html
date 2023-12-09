@@ -46,7 +46,7 @@
     if (quality != null) quality = null.split("p")[0];
 
     //新建嵌入式播放器
-    function onYouTubeIframeAPIReady() {
+    window.onload = function onYouTubeIframeAPIReady() {
       if (!window.obsstudio) {
         alert("请在OBS中打开！");
         return;
