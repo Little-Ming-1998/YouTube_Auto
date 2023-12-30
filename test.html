@@ -46,6 +46,12 @@
     let keep = urlObj.searchParams.get("keep");
     if (quality != null) quality = null.split("p")[0];
 
+    //是否自动下播，如果value为假（不设置），则自动下播
+    function auto_stop_streaming(keep_value)
+      {
+        if(!keep_value) window.obsstudio.stopStreaming();
+      }
+    
     //新建嵌入式播放器
     function onYouTubeIframeAPIReady() {
       if (!window.obsstudio) {
@@ -128,7 +134,7 @@
           event.target.getPlaylistIndex() ==
           (event.target.getPlaylist() || []).length - 1
         )
-          window.obsstudio.stopStreaming(); //如果所有视频均播放完毕，则停止推流
+          auto_stop_streaming(keep); //如果所有视频均播放完毕，则停止推流
       }
     }
 
@@ -146,7 +152,8 @@
           (event.target.getPlaylist() || []).length - 1
         )
           event.target.nextVideo();
-        else window.obsstudio.stopStreaming(); //如果所有视频均播放完毕，则停止推流
+        else auto_stop_streaming(keep);
+          //window.obsstudio.stopStreaming(); //如果所有视频均播放完毕，则停止推流
       }
     }
 
@@ -242,7 +249,7 @@
         ".ytp-heat-map-container, " +
         ".ytp-fine-scrubbing-container, " +
         ".ytp-chapters-container, " +
-        ".ytp-timed-markers-container, " +
+        //".ytp-timed-markers-container, " +
         //结尾视频墙和卡片
         ".videowall-endscreen, " +
         ".ytp-ce-element, " +
