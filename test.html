@@ -43,6 +43,7 @@
       : [];
     const playlist = urlObj.searchParams.get("list") || null;
     let quality = urlObj.searchParams.get("quality");
+    let keep = urlObj.searchParams.get("keep");
     if (quality != null) quality = null.split("p")[0];
 
     //新建嵌入式播放器
