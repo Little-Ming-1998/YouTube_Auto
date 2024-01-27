@@ -8,11 +8,14 @@
 
     var tc_vid = "";
     var tc_channel = "";
+    var quality;
     
     const urlObj = new URL(window.location.href);
 
     tc_channel = urlObj.searchParams.get("ch");
     tc_vid = urlObj.searchParams.get("id");
+    quality = urlObj.searchParams.get("q");
+    
     var options = {
         width: 1920,
         height: 1080,
@@ -30,6 +33,13 @@
     player.addEventListener(Twitch.Player.PLAY, () => {
         console.log(`视频已开始`);
         let qStr = player.getQualities();
+        console.log(qStr);
+    });
+
+    player.addEventListener(Twitch.Player.PLAYING, () => {
+        console.log(`视频已播放`);
+        if(quality) player.setQuality(quality);
+        if(!quality) console.log(`未指定画质`);
         console.log(qStr);
     });
 </script>
