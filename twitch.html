@@ -14,8 +14,9 @@
         width: 1920,
         height: 1080,
         channel: tc_channel,
-        //parent: "www.1561561618918.com"
+        //parent: "www.cloudflare.com"
     };
     var player = new Twitch.Player("twitch_player", options);
+    player.addEventListener(Twitch.Player.PAUSE, console.log(`检测到播放停止`))
 </script>
 </html>
