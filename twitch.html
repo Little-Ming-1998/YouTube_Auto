@@ -17,6 +17,10 @@
         //parent: "www.cloudflare.com"
     };
     var player = new Twitch.Player("twitch_player", options);
-    player.addEventListener(Twitch.Player.PAUSE, console.log(`检测到播放停止`))
+    function video_stop()
+        {
+            console.log(`检测到视频停止`);
+        }
+    player.addEventListener(Twitch.Player.PAUSE, video_stop())
 </script>
 </html>
