@@ -9,6 +9,7 @@
     var tc_vid = "";
     var tc_channel = "";
     var quality;
+    var flag = true;
     
     const urlObj = new URL(window.location.href);
 
@@ -37,15 +38,17 @@
         let qStr = player.getQuality();
         console.log(qStr);
     });
-/*
+
     player.addEventListener(Twitch.Player.PLAYING, () => {
         console.log(`视频已播放`);
+        if(!flag) return;
         if(quality) {
             player.setQuality(quality);
             console.log(`已设置画质 ${quality}`);
+            flag = false;
         }
         if(!quality) console.log(`未指定画质`);
         console.log(qStr);
-    });*/
+    });
 </script>
 </html>
