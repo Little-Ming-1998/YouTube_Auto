@@ -22,5 +22,10 @@
         console.log(`视频已停止`);
         window.obsstudio.stopStreaming();
     });
+
+    player.addEventListener(Twitch.Player.OFFLINE, () => {
+        console.log(`频道已离线`);
+        window.obsstudio.stopStreaming();
+    });
 </script>
 </html>
