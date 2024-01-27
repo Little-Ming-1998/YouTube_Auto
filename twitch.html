@@ -32,10 +32,12 @@
 
     player.addEventListener(Twitch.Player.PLAY, () => {
         console.log(`视频已开始`);
-        let qStr = player.getQualities();
+        let qStrList = player.getQualities();
+        console.log(qStrList);
+        let qStr = player.getQuality();
         console.log(qStr);
     });
-
+/*
     player.addEventListener(Twitch.Player.PLAYING, () => {
         console.log(`视频已播放`);
         if(quality) {
@@ -44,6 +46,6 @@
         }
         if(!quality) console.log(`未指定画质`);
         console.log(qStr);
-    });
+    });*/
 </script>
 </html>
