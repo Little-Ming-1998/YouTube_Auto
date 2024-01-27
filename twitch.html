@@ -18,7 +18,7 @@
     };
     var player = new Twitch.Player("twitch_player", options);
 
-    player.addEventListener(Twitch.Player.PAUSE, () => {
+    player.addEventListener(Twitch.Player.ENDED, () => {
         console.log(`视频已停止`);
         window.obsstudio.stopStreaming();
     });
