@@ -38,7 +38,10 @@
 
     player.addEventListener(Twitch.Player.PLAYING, () => {
         console.log(`视频已播放`);
-        if(quality) player.setQuality(quality);
+        if(quality) {
+            player.setQuality(quality);
+            console.log(`已设置画质 ${quality}`);
+        }
         if(!quality) console.log(`未指定画质`);
         console.log(qStr);
     });
