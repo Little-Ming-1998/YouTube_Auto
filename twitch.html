@@ -5,15 +5,19 @@
 <script src="https://player.twitch.tv/js/embed/v1.js"></script>
 <script src="https://fastly.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
 <script type="text/javascript">
+
+    var tc_vid = "";
+    var tc_channel = "";
     
     const urlObj = new URL(window.location.href);
 
-    var tc_channel = urlObj.searchParams.get("ch");
-
+    tc_channel = urlObj.searchParams.get("ch");
+    tc_vid = urlObj.searchParams.get("id");
     var options = {
         width: 1920,
         height: 1080,
         channel: tc_channel,
+        video: tc_vid
         //parent: "www.cloudflare.com"
     };
     var player = new Twitch.Player("twitch_player", options);
@@ -21,6 +25,12 @@
     player.addEventListener(Twitch.Player.ENDED, () => {
         console.log(`视频已停止`);
         window.obsstudio.stopStreaming();
+    });
+
+    player.addEventListener(Twitch.Player.PLAY, () => {
+        console.log(`视频已开始`);
+        let qStr = player.getQualities();
+        console.log(qStr);
     });
 </script>
 </html>
