@@ -33,7 +33,7 @@
 
     player.addEventListener(Twitch.Player.PLAY, () => {
         console.log(`视频已开始`);
-        let qStrList = player.getQualities();
+        let qStrList = JSON.stringify(player.getQualities());
         console.log(`当前视频提供画质\n${qStrList}`);
         let qStr = player.getQuality();
         console.log(`当前视频设置画质${qStr}`);
