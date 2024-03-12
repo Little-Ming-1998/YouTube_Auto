@@ -13,9 +13,9 @@
     
     const urlObj = new URL(window.location.href);
 
-    tc_channel = urlObj.searchParams.get("ch");
-    tc_vid = urlObj.searchParams.get("id");
-    quality = urlObj.searchParams.get("q");
+    tc_channel = urlObj.searchParams.get("ch"); //ch=频道ID
+    tc_vid = urlObj.searchParams.get("id"); //id=视频id
+    quality = urlObj.searchParams.get("q"); //q=视频质量
     
     var options = {
         width: 1920,
@@ -34,19 +34,19 @@
     player.addEventListener(Twitch.Player.PLAY, () => {
         console.log(`视频已开始`);
         let qStrList = player.getQualities();
-        console.log(qStrList);
+        console.log(`当前视频提供画质\n${qStrList}`);
         let qStr = player.getQuality();
-        console.log(qStr);
+        console.log(`当前视频设置画质${qStr}`);
     });
 
     player.addEventListener(Twitch.Player.PLAYING, () => {
         console.log(`视频已播放`);
-        if(!flag) return;
         player.setVolume(1);
+        if(!flag) return;
         if(quality) {
             player.setQuality(quality);
             console.log(`已设置画质 ${quality}`);
-            flag = false;
+            flag = false; //只在本页刷新之后的第一次播放时切换画质
         }
         if(!quality) console.log(`未指定画质`);
         console.log(qStr);
