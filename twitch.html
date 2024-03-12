@@ -5,7 +5,13 @@
 <script src="https://player.twitch.tv/js/embed/v1.js"></script>
 <script src="https://fastly.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
 <script type="text/javascript">
-
+    
+/*
+目前基本实现：直播结束后自动下播、首次加载自动切换画质
+待解决：无法待机
+政策限制：必须使用HTTPS访问本页（https://dev.twitch.tv/docs/embed/）
+*/
+    
     var tc_vid = "";
     var tc_channel = "";
     var quality;
@@ -13,6 +19,7 @@
     
     const urlObj = new URL(window.location.href);
 
+    //参数
     tc_channel = urlObj.searchParams.get("ch"); //ch=频道ID
     tc_vid = urlObj.searchParams.get("id"); //id=视频id
     quality = urlObj.searchParams.get("q"); //q=视频质量
