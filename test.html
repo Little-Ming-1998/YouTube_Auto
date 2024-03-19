@@ -49,7 +49,10 @@
     //阻断自动下播功能
     function auto_stop_streaming(keep_value) {
         if (!keep_value) {
-            setTimeout(function(){window.obsstudio.stopStreaming()}, 5000);
+            setTimeout(
+                function(){
+                    if(player.getPlayerState() == 0) window.obsstudio.stopStreaming()
+                }, 5000);
         }
     }
 
