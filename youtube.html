@@ -102,11 +102,14 @@
     function onPlayerReady(event) {
         //导入播放列表
         //XXX 支持同时使用id和list参数
-        if (id.length != 0) {
-            event.target.loadPlaylist({ playlist: id });
-        } else if (playlist) {
-            event.target.loadPlaylist({ list: playlist, listType: "playlist" });
-        }
+    if (id.length != 0) {
+      event.target.loadPlaylist();
+      if (id.length != 0) {
+        setTimeout(function(){ event.target.loadPlaylist({ playlist: id }) }, 500);
+      } else if (playlist) {
+        setTimeout(function(){ event.target.loadPlaylist({ list: playlist, listType: "playlist" }) }, 500);
+      }
+    }
 
         event.target.iframe = document.getElementById("player"); //获取页面元素，方便操作
         injectCSS(event.target.iframe.contentDocument); //注入CSS样式
