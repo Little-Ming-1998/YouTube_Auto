@@ -78,8 +78,7 @@
                     if (data.length != 0) {
                         $("#vid").text(`ID: ${data[0].id}`);
                         $("#vtitle").text(`Title: ${data[0].title}`);
-                        if (data[0].status == "live") $('#msg').text(`Msg: 检测到正在直播`)
-                        if (data[0].status == "upcoming") $('#msg').html(`Msg: 检测到已创建待机室<br><br>Redirecting >>> Youtube<br>Quality: ${quality}`)
+                        $('#msg').html(`Msg: 已检测到目标频道正在直播或正在待机<br><br>Redirecting >>> Youtube<br>Quality: ${quality}`)
                         //console.log(`https://you-tube-auto.pages.dev/youtube.html?quality=${quality}&id=${data[0].id}`);
                         setTimeout(function () {
                             window.location.replace(`https://you-tube-auto.pages.dev/youtube.html?quality=${quality}&id=${data[0].id}`);
