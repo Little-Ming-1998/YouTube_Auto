@@ -74,7 +74,7 @@
                 success: function (data) {
                     time = `${moment().utcOffset("+08:00").format("YYYY-M-D HH:mm:ss")}`;
                     $("#time").text(`Time: ${time}`);
-                    if (data.length == 0) $('#msg').text('未检测到正在直播或12小时内开播的待机室')
+                    if (data.length == 0) $('#msg').text('未检测到正在直播或正在待机，继续轮询...')
                     if (data.length != 0) {
                         $("#vid").text(`ID: ${data[0].id}`);
                         $("#vtitle").text(`Title: ${data[0].title}`);
