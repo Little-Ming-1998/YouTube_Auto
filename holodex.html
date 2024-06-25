@@ -148,7 +148,7 @@
                 success: function (data) {
                     time = `${moment().utcOffset("+08:00").format("YYYY-M-D HH:mm:ss")}`;
                     $("#time").text(`Time: ${time}`);
-                    if (data.length == 0) $('#msg').text('此频道暂无直播或待机')
+                    if (data.length == 0) $('#msg').text('此频道暂无直播或未来8小时内没有待机')
                     if (data.length != 0) {
                         $("#vid").text(`ID: ${data[0].id}`);
                         $("#vtitle").text(`Title: ${data[0].title}`);
