@@ -156,13 +156,13 @@
                         if (ua_regex.test(ua) == true) {
                             $('#msg').html(`Msg: 此频道正在直播或正在待机<br><br>Redirecting >>> Youtube<br>Quality: ${quality}`)
                             setTimeout(function () {
-                                window.location.replace(`${window.location.origin}youtube.html?quality=${quality}&id=${data[0].id}`);
+                                window.location.replace(`${window.location.origin}/youtube.html?quality=${quality}&id=${data[0].id}`);
                             }, 2000)
                             //window.location.replace
                         }
                         if (ua_regex.test(ua) != true){
                             $('#msg').html(`Msg: 此频道正在直播或正在待机<br><br>请使用OBS访问`)
-                            console.log(`${window.location.origin}youtube.html?quality=${quality}&id=${data[0].id}`)
+                            console.log(`${window.location.origin}/youtube.html?quality=${quality}&id=${data[0].id}`)
                         }
                     }
                     return 0
