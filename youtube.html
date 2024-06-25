@@ -22,10 +22,12 @@
 <script script charset="GB2312" language="javascript" type="text/javascript">
 
     //导入YouTube 嵌入式播放器 API
+    function init(){
     let tag = document.createElement("script");
     tag.src = "https://www.youtube.com/iframe_api";
     let firstScriptTag = document.getElementsByTagName("script")[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    }
 
     //YouTube 嵌入式播放器 API: https://developers.google.com/youtube/iframe_api_reference?hl=zh-cn
     //OBS Studio JavaScript API: https://github.com/obsproject/obs-browser#control-obs
@@ -292,7 +294,7 @@
     }
 </script>
 
-<body>
+<body onload="init()">
     <div id="player"></div>
 </body>
 
