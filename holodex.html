@@ -116,7 +116,7 @@
             ["kobo","UCjLEmnpCNeisMxy134KPwWw"],
             ["kaela","UCZLZ8Jjx_RN2CXloOmgTHVg"],
         ])
-        if(channel_id.length < 10) channel_id = nickname.get(channel_id);
+        if(channel_id.length < 10) channel_id = nickname.get(channel_id.toLowerCase());
         
         var ua = navigator.userAgent
         var ua_regex = new RegExp('OBS');
