@@ -9,161 +9,184 @@
     <title>checker</title>
 </head>
 
-<body translate="no" onload="checker()">
-    <div id="time" style="font-size: 40px; font-family: 'SimHei'; color:gray">Time: N/A</div><br>
-    <div id="vid" style="font-size: 40px; font-family: 'SimHei'; color:gray">ID: N/A</div><br>
-    <div id="vtitle" style="font-size: 40px; font-family: 'SimHei'; color:gray">Title: N/A</div><br>
-    <div id="msg" style="font-size: 40px; font-family: 'SimHei'; color:gray">Msg: N/A</div><br>
+<body translate="no" onload="UA_check(),checker()" onunload="">
+    <iframe id="ytb" src=" " height="1080" width="1920" frameborder="no" border="0" marginwidth="0" marginheight="0"
+        allowtransparency="yes" style="border:0; display:none"></iframe>
+    <div id="info">
+        <div id="time" style="font-size: 50px; font-family: 'XHei Mono.Ubuntu';">Time: N/A</div><br>
+        <div id="vid" style="font-size: 50px; font-family: 'XHei Mono.Ubuntu';">ID: N/A</div><br>
+        <div id="vtitle" style="font-size: 50px; font-family: 'XHei Mono.Ubuntu';">Title: N/A</div><br><br>
+        <div id="msg" style="font-size: 50px; font-family: 'XHei Mono.Ubuntu';">Msg: N/A</div><br><br>
+        <div id="timer" style="font-size: 50px; font-family: 'XHei Mono.Ubuntu';"></div>
+    </div>
 
     <script src="https://fastly.jsdelivr.net/npm/hacktimer@1.1.3/HackTimer.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdn.staticfile.net/moment.js/2.30.1/moment.min.js"></script>
     <script src="https://cdn.staticfile.org/jquery/3.7.1/jquery.js"></script>
     <script>
+        //https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js
+        //https://fastly.jsdelivr.net/npm/moment@2.30.1/moment.min.js
+        var init;
         const urlObj = new URL(window.location.href);
         const holodex_key = urlObj.searchParams.get("key");
         var channel_id = urlObj.searchParams.get("id");
-        
-        var quality = '';
-        urlObj.searchParams.get("quality") ? quality = urlObj.searchParams.get("quality") : quality = '';
-
-        var time = "";
+        const quality = urlObj.searchParams.get("quality");
 
         var nickname = new Map([
             //Official
-            ["holo","UCJFZiqLMntJufDCHc6bQixg"],
-            ["holoid","UCfrWoRGlawPQDQxxeIDRP0Q"],
-            ["holoen","UCotXwY6s8pWmuWd_snKYjhg"],
-            ["devis","UC10wVt6hoQiwySRhz7RdOUA"],
+            ["holo", "UCJFZiqLMntJufDCHc6bQixg"],
+            ["holoid", "UCfrWoRGlawPQDQxxeIDRP0Q"],
+            ["holoen", "UCotXwY6s8pWmuWd_snKYjhg"],
+            ["devis", "UC10wVt6hoQiwySRhz7RdOUA"],
             //JP 0
-            ["sora","UCp6993wxpyDPHUpavwDFqgg"],
-            ["sui","UC5CwaMl1eIgY8h02uZw7u8A"],["suisei","UC5CwaMl1eIgY8h02uZw7u8A"],
-            ["miko","UC-hM6YJuNYVAmUWxeIr9FeA"],
-            ["robo","UCDqI2jOz0weumE8s7paEk6g"],["roboco","UCDqI2jOz0weumE8s7paEk6g"],
-            ["az","UC0TXe_LYZ4scaW2XMyi5_kw"],["azki","UC0TXe_LYZ4scaW2XMyi5_kw"],
+            ["sora", "UCp6993wxpyDPHUpavwDFqgg"],
+            ["sui", "UC5CwaMl1eIgY8h02uZw7u8A"], ["suisei", "UC5CwaMl1eIgY8h02uZw7u8A"],
+            ["miko", "UC-hM6YJuNYVAmUWxeIr9FeA"],
+            ["robo", "UCDqI2jOz0weumE8s7paEk6g"], ["roboco", "UCDqI2jOz0weumE8s7paEk6g"],
+            ["az", "UC0TXe_LYZ4scaW2XMyi5_kw"], ["azki", "UC0TXe_LYZ4scaW2XMyi5_kw"],
             //JP 1
-            ["fbk","UCdn5BQ06XqgXoAxIhbqw5Rg"],
-            ["aki","UCFTLzh12_nrtzqBPsTCqenA"],
-            ["matsuri","UCQ0UDLQCjY0rmuxCDE38FGg"],["ji","UCQ0UDLQCjY0rmuxCDE38FGg"],
-            ["haato","UC1CfXB_kRs3C-zaeTG3oGyg"],["hato","UC1CfXB_kRs3C-zaeTG3oGyg"],
+            ["fbk", "UCdn5BQ06XqgXoAxIhbqw5Rg"],
+            ["aki", "UCFTLzh12_nrtzqBPsTCqenA"],
+            ["matsuri", "UCQ0UDLQCjY0rmuxCDE38FGg"], ["ji", "UCQ0UDLQCjY0rmuxCDE38FGg"],
+            ["haato", "UC1CfXB_kRs3C-zaeTG3oGyg"], ["hato", "UC1CfXB_kRs3C-zaeTG3oGyg"],
             //Gamers
-            ["mio","UCp-5t9SrOQwXMU7iIjQfARg"],
-            ["okayu","UCvaTdHTWBGv3MKj3KVqJVCw"],
-            ["korone","UChAnqc_AY5_I3Px5dig3X1Q"],["inu","UChAnqc_AY5_I3Px5dig3X1Q"],
+            ["mio", "UCp-5t9SrOQwXMU7iIjQfARg"],
+            ["okayu", "UCvaTdHTWBGv3MKj3KVqJVCw"],
+            ["korone", "UChAnqc_AY5_I3Px5dig3X1Q"], ["inu", "UChAnqc_AY5_I3Px5dig3X1Q"],
             //JP 2
-            ["aqua","UC1opHUrw8rvnsadT-iGp7Cg"],
-            ["shion","UCXTpFs_3PqI41qX2d9tL2Rw"],
-            ["486","UCvzGlP9oQwU--Y0r9id_jnA"],["subaru","UCvzGlP9oQwU--Y0r9id_jnA"],
-            ["ayame","UC7fk0CB07ly8oSl0aqKkqFg"],
-            ["choco","UC1suqwovbL1kzsoaZgFZLKg"],
+            ["aqua", "UC1opHUrw8rvnsadT-iGp7Cg"],
+            ["shion", "UCXTpFs_3PqI41qX2d9tL2Rw"],
+            ["486", "UCvzGlP9oQwU--Y0r9id_jnA"], ["subaru", "UCvzGlP9oQwU--Y0r9id_jnA"],
+            ["ayame", "UC7fk0CB07ly8oSl0aqKkqFg"],
+            ["choco", "UC1suqwovbL1kzsoaZgFZLKg"],
             //JP 3
-            ["peko","UC1DCedRgGHBdm81E1llLhOQ"],
-            ["noel","UCdyqAaZDKHXg4Ahi7VENThQ"],
-            ["flare","UCvInZx9h3jC2JzsIzoOebWg"],
-            ["marin","UCCzUftO8KOVkV4wQG1vkUvg"],
+            ["peko", "UC1DCedRgGHBdm81E1llLhOQ"],
+            ["noel", "UCdyqAaZDKHXg4Ahi7VENThQ"],
+            ["flare", "UCvInZx9h3jC2JzsIzoOebWg"],
+            ["marin", "UCCzUftO8KOVkV4wQG1vkUvg"],
             //JP 4
-            ["wtm","UCqm3BQLlJfvkTsX_hvm0UmA"],["watame","UCqm3BQLlJfvkTsX_hvm0UmA"],
-            ["luna","UCa9Y57gfeY0Zro_noHRVrnw"],
-            ["towa","UC1uv2Oq6kNxgATlCiez59hw"],
-            ["knt","UCZlDXzGoo7d44bwdNObFacg"],["kanata","UCZlDXzGoo7d44bwdNObFacg"],
+            ["wtm", "UCqm3BQLlJfvkTsX_hvm0UmA"], ["watame", "UCqm3BQLlJfvkTsX_hvm0UmA"],
+            ["luna", "UCa9Y57gfeY0Zro_noHRVrnw"],
+            ["towa", "UC1uv2Oq6kNxgATlCiez59hw"],
+            ["knt", "UCZlDXzGoo7d44bwdNObFacg"], ["kanata", "UCZlDXzGoo7d44bwdNObFacg"],
             //JP 5
-            ["nene","UCAWSyEs_Io8MtpY3m-zqILA"],
-            ["polka","UCK9V2B22uJYu3N7eR_BT9QA"],["pol","UCK9V2B22uJYu3N7eR_BT9QA"],
-            ["botan","UCUKD-uaobj9jiqB-VXt71mA"],["446","UCUKD-uaobj9jiqB-VXt71mA"],
-            ["lamy","UCFKOVgVbGmX65RxO3EtH3iw"],
+            ["nene", "UCAWSyEs_Io8MtpY3m-zqILA"],
+            ["polka", "UCK9V2B22uJYu3N7eR_BT9QA"], ["pol", "UCK9V2B22uJYu3N7eR_BT9QA"],
+            ["botan", "UCUKD-uaobj9jiqB-VXt71mA"], ["446", "UCUKD-uaobj9jiqB-VXt71mA"],
+            ["lamy", "UCFKOVgVbGmX65RxO3EtH3iw"],
             //holo X
-            ["lap","UCENwRMx5Yh42zWpzURebzTw"],
-            ["61","UCs9_O1tRPMQTHQ-N_L6FU2g"],["lui","UCs9_O1tRPMQTHQ-N_L6FU2g"],
-            ["koyo","UC6eWCld0KwmyHFbAqK3V-Rw"],
-            ["168","UC_vMYWcDjmfdpH6r4TTn1MQ"],["iroha","UC_vMYWcDjmfdpH6r4TTn1MQ"],
-            ["skmt","UCIBY1ollUsauvVi4hW4cumw"],
+            ["lap", "UCENwRMx5Yh42zWpzURebzTw"],
+            ["61", "UCs9_O1tRPMQTHQ-N_L6FU2g"], ["lui", "UCs9_O1tRPMQTHQ-N_L6FU2g"],
+            ["koyo", "UC6eWCld0KwmyHFbAqK3V-Rw"],
+            ["168", "UC_vMYWcDjmfdpH6r4TTn1MQ"], ["iroha", "UC_vMYWcDjmfdpH6r4TTn1MQ"],
+            ["skmt", "UCIBY1ollUsauvVi4hW4cumw"],
             //Regloss
-            ["ao","UCMGfV7TVTmHhEErVJg1oHBQ"],
-            ["knd","UCWQtYtq9EOB4-I5P-3fh8lA"],["kanade","UCWQtYtq9EOB4-I5P-3fh8lA"],
-            ["rad","UCdXAk5MpyLD8594lm_OvtGQ"],["raden","UCdXAk5MpyLD8594lm_OvtGQ"],
-            ["rrk","UCtyWhCj3AqKh2dXctLkDtng"],["ririka","UCtyWhCj3AqKh2dXctLkDtng"],
-            ["hjm","UC1iA6_NT4mtAcIII6ygrvCw"],["hajime","UC1iA6_NT4mtAcIII6ygrvCw"],
+            ["ao", "UCMGfV7TVTmHhEErVJg1oHBQ"],
+            ["knd", "UCWQtYtq9EOB4-I5P-3fh8lA"], ["kanade", "UCWQtYtq9EOB4-I5P-3fh8lA"],
+            ["rad", "UCdXAk5MpyLD8594lm_OvtGQ"], ["raden", "UCdXAk5MpyLD8594lm_OvtGQ"],
+            ["rrk", "UCtyWhCj3AqKh2dXctLkDtng"], ["ririka", "UCtyWhCj3AqKh2dXctLkDtng"],
+            ["hjm", "UC1iA6_NT4mtAcIII6ygrvCw"], ["hajime", "UC1iA6_NT4mtAcIII6ygrvCw"],
             //EN 1
-            ["gura","UCoSrY_IQQVpmIRZ9Xf-y93g"],
-            ["ina","UCMwGHR0BTZuLsmjY_NT5Pwg"],
-            ["ame","UCyl1z3jo3XHR1riLFKG5UAg"],
-            ["calli","UCL_qhgtOy0dy1Agp8vkySQg"],["mori","UCL_qhgtOy0dy1Agp8vkySQg"],["cali","UCL_qhgtOy0dy1Agp8vkySQg"],
-            ["kiara","UCHsx4Hqa-1ORjQTh9TYDhww"],
+            ["gura", "UCoSrY_IQQVpmIRZ9Xf-y93g"],
+            ["ina", "UCMwGHR0BTZuLsmjY_NT5Pwg"],
+            ["ame", "UCyl1z3jo3XHR1riLFKG5UAg"],
+            ["calli", "UCL_qhgtOy0dy1Agp8vkySQg"], ["mori", "UCL_qhgtOy0dy1Agp8vkySQg"], ["cali", "UCL_qhgtOy0dy1Agp8vkySQg"],
+            ["kiara", "UCHsx4Hqa-1ORjQTh9TYDhww"],
             //EN 2
-            ["bae","UCgmPnx-EEeOrZSg5Tiw7ZRQ"],
-            ["irys","UC8rcEBzJSleTkf_-agPM20g"],
-            ["fauna","UCO_aKKYxn4tvrqPjcTzZ6EQ"],
-            ["kronii","UCmbs8T6MWqUHP1tIQvSgKrg"],
-            ["mumei","UC3n5uGu18FoCy23ggWWp8tA"],
+            ["bae", "UCgmPnx-EEeOrZSg5Tiw7ZRQ"],
+            ["irys", "UC8rcEBzJSleTkf_-agPM20g"],
+            ["fauna", "UCO_aKKYxn4tvrqPjcTzZ6EQ"],
+            ["kronii", "UCmbs8T6MWqUHP1tIQvSgKrg"],
+            ["mumei", "UC3n5uGu18FoCy23ggWWp8tA"],
             //EN 3
-            ["shiori","UCgnfPPb9JI3e9A4cXHnWbyg"],
-            ["fwmc","UCt9H_RpQzhxzlyBxFqrdHqA"],
-            ["rissa","UC_sFNM0z0MWm9A6WlKPuMMg"],
-            ["bijou","UC9p_lqQ0FEDz327Vgf5JwqA"],["biboo","UC9p_lqQ0FEDz327Vgf5JwqA"],
+            ["shiori", "UCgnfPPb9JI3e9A4cXHnWbyg"],
+            ["fwmc", "UCt9H_RpQzhxzlyBxFqrdHqA"],
+            ["rissa", "UC_sFNM0z0MWm9A6WlKPuMMg"],
+            ["bijou", "UC9p_lqQ0FEDz327Vgf5JwqA"], ["biboo", "UC9p_lqQ0FEDz327Vgf5JwqA"],
             //EN 4
-            ["liz","UCW5uhrG1eCBYditmhL0Ykjw"],
-            ["gigi","UCDHABijvPBnJm7F-KlNME3w"],
-            ["ci","UCvN5h1ShZtc7nly3pezRayg"],
-            ["raora","UCl69AEx4MdqMZH7Jtsm7Tig"],
+            ["liz", "UCW5uhrG1eCBYditmhL0Ykjw"],
+            ["gigi", "UCDHABijvPBnJm7F-KlNME3w"],
+            ["ci", "UCvN5h1ShZtc7nly3pezRayg"],
+            ["raora", "UCl69AEx4MdqMZH7Jtsm7Tig"],
             //ID 1
-            ["risu","UCOyYb1c43VlX9rc_lT6NKQw"],
-            ["moona","UCP0BspO_AMEe3aQqqpo89Dg"],
-            ["iofi","UCAoy6rzhSf4ydcYjJw3WoVg"],
+            ["risu", "UCOyYb1c43VlX9rc_lT6NKQw"],
+            ["moona", "UCP0BspO_AMEe3aQqqpo89Dg"],
+            ["iofi", "UCAoy6rzhSf4ydcYjJw3WoVg"],
             //ID 2
-            ["ollie","UCYz_5n-uDuChHtLo7My1HnQ"],
-            ["anya","UC727SQYUvx5pDDGQpTICNWg"],
-            ["reine","UChgTyjG-pdNvxxhdsXfHQ5Q"],
+            ["ollie", "UCYz_5n-uDuChHtLo7My1HnQ"],
+            ["anya", "UC727SQYUvx5pDDGQpTICNWg"],
+            ["reine", "UChgTyjG-pdNvxxhdsXfHQ5Q"],
             //ID 3
-            ["zeta","UCTvHWSfBZgtxE4sILOaurIQ"],
-            ["kobo","UCjLEmnpCNeisMxy134KPwWw"],
-            ["kaela","UCZLZ8Jjx_RN2CXloOmgTHVg"],["ela","UCZLZ8Jjx_RN2CXloOmgTHVg"],
+            ["zeta", "UCTvHWSfBZgtxE4sILOaurIQ"],
+            ["kobo", "UCjLEmnpCNeisMxy134KPwWw"],
+            ["kaela", "UCZLZ8Jjx_RN2CXloOmgTHVg"], ["ela", "UCZLZ8Jjx_RN2CXloOmgTHVg"],
         ])
-        if(channel_id.length < 10) channel_id = nickname.get(channel_id.toLowerCase());
-        
-        var ua = navigator.userAgent
-        var ua_regex = new RegExp('OBS');
+        if (channel_id.substring(0, 2) != "UC") channel_id = nickname.get(channel_id.toLowerCase());
 
+        var time = "";
+
+        //倒计时
+        var count = 4
         function timer() {
             count = count - 1;
-            if (count <= 0) {
+            if (count < 0) {
+                $('#timer').text(``);
                 clearInterval(counter);
-                //counter ended, do something here
                 return;
             }
-
+        }
+        //直播结束
+        function play_end() {
+            time = `${moment().utcOffset("+08:00").format("YYYY-M-D HH:mm:ss")}`;
+            $("#time").text(`Time: ${time}`);
+            document.getElementById('ytb').style.display = 'none';
+            $('#msg').html(`Msg: 本节目经已播映完毕，感谢收看`)
+        }
+        //页面卸载
+        function ytb_iframe_disable() {
+            $('#ytb').attr('src', `about:blank`)
         }
 
+        var ua = navigator.userAgent
+        var ua_regex = new RegExp('OBS');
+        function UA_check() {
+            document.getElementById('info').style.color = ua_regex.test(ua) == true ? 'White' : 'Black'
+        }
+
+        //检测直播
         function checker() {
             if (!channel_id) {
-                $('#msg').text('Msg: 未提供ID或昵称错误');
+                $('#msg').text('Msg: 未提供ID');
                 return 0;
             }
-
+            
             if (!holodex_key) {
                 $('#msg').text('Msg: 未提供Holodex密钥')
                 return 0;
             }
             $.ajax({
-                url: `https://holodex.net/api/v2/live?lang=zh&channel_id=${channel_id}&max_upcoming_hours=8`,
+                url: `https://holodex.net/api/v2/live?lang=zh&channel_id=${channel_id}&max_upcoming_hours=12`,
                 type: `get`,
-                headers: { "X-APIKEY": holodex_key },
+                headers: { "X-APIKEY": holodex_key},
                 success: function (data) {
                     time = `${moment().utcOffset("+08:00").format("YYYY-M-D HH:mm:ss")}`;
                     $("#time").text(`Time: ${time}`);
-                    if (data.length == 0) $('#msg').text('此频道暂无直播或未来8小时内没有待机')
+                    if (data.length == 0) $('#msg').text('未检测到正在直播或正在待机')
                     if (data.length != 0) {
+                        clearInterval(init); //停止检查
                         $("#vid").text(`ID: ${data[0].id}`);
                         $("#vtitle").text(`Title: ${data[0].title}`);
-                        //console.log(`https://you-tube-auto.pages.dev/youtube.html?quality=${quality}&id=${data[0].id}`);
                         if (ua_regex.test(ua) == true) {
-                            $('#msg').html(`Msg: 此频道正在直播或正在待机<br><br>Redirecting >>> Youtube<br>Quality: ${quality}`)
+                            $('#msg').html(`Msg: 已检测到目标频道正在直播或正在待机<br><br>Simulcast Starting >>> Youtube [Quality: ${quality}]`)
+                            console.log(`${window.location.origin}/YTAutoTG.html?quality=${quality}&id=${data[0].id}`);
+                            let counter = setInterval(timer, 1000);
                             setTimeout(function () {
-                                window.location.replace(`${window.location.origin}/youtube.html?quality=${quality}&id=${data[0].id}`);
-                            }, 2000)
-                            //window.location.replace
+                                document.getElementById('ytb').style.display = 'flex';
+                                $('#ytb').attr('src', `https://you-tube-auto.pages.dev/youtube.html?quality=${quality}&id=${data[0].id}`);
+                            }, 3000)
                         }
-                        if (ua_regex.test(ua) != true){
-                            $('#msg').html(`Msg: 此频道正在直播或正在待机<br><br>请使用OBS访问`)
-                            console.log(`${window.location.origin}/youtube.html?quality=${quality}&id=${data[0].id}`)
+                        if (ua_regex.test(ua) != true) {
+                            $('#msg').html("Msg: 请使用OBS访问");
                         }
                     }
                     return 0
@@ -176,11 +199,7 @@
                 }
             })
         }
-        setInterval(w = function () {
-            checker();
-        }, 60000)
-        //checker();
-        //UA_check();
+        init = setInterval(checker, 10000)
     </script>
 
 </body>
