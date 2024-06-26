@@ -51,9 +51,11 @@
     //阻断自动下播功能
     function auto_stop_streaming(keep_value) {
         if (!keep_value) {
+            if (self != top) window.parent.play_end();
             setTimeout(
                 function(){
                     if(player.getPlayerState() == 0) window.obsstudio.stopStreaming()
+                    if (self != top) window.parent.ytb_iframe_disable();
                 }, 5000);
         }
     }
