@@ -1,33 +1,29 @@
 <!doctype html>
 <html>
-<meta charset="utf-8" />
-<style>
+  <meta charset="utf-8" />
+  <style>
     body {
-        background-color: black;
-        height: 100%;
-        width: 100%;
-        overflow: hidden;
-        position: absolute;
-        margin: 0;
-        padding: 0;
+      background-color: black;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      position: absolute;
+      margin: 0;
+      padding: 0;
     }
 
     #player {
-        height: 100%;
-        width: 100%;
-        display: none;
+      height: 100%;
+      width: 100%;
+      display: none;
     }
-</style>
-<script src="https://fastly.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
-<script script charset="GB2312" language="javascript" type="text/javascript">
-
+  </style>
+  <script>
     //导入YouTube 嵌入式播放器 API
-    function init(){
     let tag = document.createElement("script");
     tag.src = "https://www.youtube.com/iframe_api";
     let firstScriptTag = document.getElementsByTagName("script")[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-    }
 
     //YouTube 嵌入式播放器 API: https://developers.google.com/youtube/iframe_api_reference?hl=zh-cn
     //OBS Studio JavaScript API: https://github.com/obsproject/obs-browser#control-obs
@@ -41,263 +37,252 @@
     //获取参数
     const urlObj = new URL(window.location.href);
     const id = urlObj.searchParams.get("id")
-        ? urlObj.searchParams.get("id").split(",").filter(Boolean)
-        : [];
+      ? urlObj.searchParams.get("id").split(",").filter(Boolean)
+      : [];
     const playlist = urlObj.searchParams.get("list") || null;
     let quality = urlObj.searchParams.get("quality");
-    let keep = urlObj.searchParams.get("keep");
-    if (quality != null) quality = null.split("p")[0];
-
-    //阻断自动下播功能
-    function auto_stop_streaming(keep_value) {
-        if (!keep_value) {
-            if (self != top) window.parent.play_end();
-            setTimeout(
-                function(){
-                    if(player.getPlayerState() == 0) window.obsstudio.stopStreaming()
-                    if (self != top) window.parent.ytb_iframe_disable();
-                }, 10000);
-        }
-    }
+    if (quality != null) quality = quality.split("p")[0];
 
     //新建嵌入式播放器
     function onYouTubeIframeAPIReady() {
-        if (!window.obsstudio) {
-            alert("请在OBS中打开！");
-            return;
+      if (!window.obsstudio) {
+        alert("请在OBS中打开！");
+        return;
+      }
+      if (id.length && playlist) {
+        alert(
+          "暂时不支持同时指定id参数与list参数。\n只有id参数中指定的视频会播放。",
+        );
+      }
+      if (id.length == 0 && !playlist) {
+        alert("未提供视频ID，无法播放。\n请按格式正确添加id参数或list参数。");
+        return;
+      }
+      window.obsstudio.getControlLevel(function (level) {
+        if (level != 5) {
+          alert(
+            "权限不足，无法自动停止推流。\n请在浏览器源的属性中\n将页面权限设置为“OBS的完全访问权限”。",
+          );
         }
-        if (id.length && playlist) {
-            alert(
-                "暂时不支持同时指定id参数与list参数。\n只有id参数中指定的视频会播放。",
-            );
-        }
-        if (id.length == 0 && !playlist) {
-            alert("未提供视频ID，无法播放。\n请按格式正确添加id参数或list参数。");
-            return;
-        }
-        window.obsstudio.getControlLevel(function (level) {
-            if (level != 5) {
-                alert(
-                    "权限不足，无法自动停止推流。\n请在浏览器源的属性中\n将页面权限设置为“OBS的完全访问权限”。",
-                );
-            }
-        });
+      });
 
-        player = new YT.Player("player", {
-            videoId: "",
-            playerVars: {
-                autoplay: 1,
-                controls: 1,
-                rel: 0,
-                modestbranding: 1,
-                fs: 0,
-            },
-            events: {
-                //事件监听器
-                onStateChange: onPlayerStateChange,
-                onReady: onPlayerReady,
-                onError: onPlayerError,
-            },
-        });
-        player.index = -1;
-        player.lastIndex = -2;
+      player = new YT.Player("player", {
+        videoId: "",
+        playerVars: {
+          autoplay: 1,
+          controls: 1,
+          rel: 0,
+          modestbranding: 1,
+          fs: 0,
+        },
+        events: {
+          //事件监听器
+          onStateChange: onPlayerStateChange,
+          onReady: onPlayerReady,
+          onError: onPlayerError,
+        },
+      });
+      player.index = -1;
+      player.lastIndex = -2;
     }
 
     function onPlayerReady(event) {
-        //导入播放列表
-        //XXX 支持同时使用id和list参数
-    if (id.length != 0) {
+      //导入播放列表
+      //XXX 支持同时使用id和list参数
       event.target.loadPlaylist();
       if (id.length != 0) {
         setTimeout(function(){ event.target.loadPlaylist({ playlist: id }) }, 500);
       } else if (playlist) {
         setTimeout(function(){ event.target.loadPlaylist({ list: playlist, listType: "playlist" }) }, 500);
       }
-    }
 
-        event.target.iframe = document.getElementById("player"); //获取页面元素，方便操作
-        injectCSS(event.target.iframe.contentDocument); //注入CSS样式
-        event.target.playVideo(); //开始播放
+      event.target.iframe = document.getElementById("player"); //获取页面元素，方便操作
+      injectCSS(event.target.iframe.contentDocument); //注入CSS样式
+      event.target.playVideo(); //开始播放
     }
 
     function onPlayerStateChange(event) {
-        const currentIndex = event.target.getPlaylistIndex();
-        console.log(event.data);
-        if (event.data == YT.PlayerState.BUFFERING) {
-            //currentIndex为-1说明列表丢失，重载列表
-            //在缓冲时重载列表，不影响观感
-            if (currentIndex == -1) refreshPlaylist(event.target);
-        } else if (event.data == YT.PlayerState.PLAYING) {
-            event.target.iframe.style.display = "block";
-            if (currentIndex !== event.target.lastIndex && quality) {
-                //仅在第一次变为PLAYING时改变画质
-                event.target.lastIndex = currentIndex;
-                autoChangeQuality(event.target.iframe, quality);
-            }
-        } else if (event.data == YT.PlayerState.UNSTARTED) {
-            //等待直播开始，这种情况下会丢失列表
-            //记录index以便确认位置
-            if (event.target.index != -1)
-                event.target.iframe.style.display = "block";
-            event.target.index = currentIndex;
-        } else if (event.data == YT.PlayerState.ENDED) {
-            if (
-                event.target.getPlaylistIndex() ==
-                (event.target.getPlaylist() || []).length - 1
-            )
-                auto_stop_streaming(keep); //如果所有视频均播放完毕，则停止推流
+      if (event.target.index != -1) event.target.iframe.style.display = "block";
+      const currentIndex = event.target.getPlaylistIndex();
+      console.log(
+        "status:" +
+          event.data +
+          " current:" +
+          currentIndex +
+          " index:" +
+          event.target.index,
+      );
+      if (event.data == YT.PlayerState.BUFFERING) {
+        //currentIndex为-1说明列表丢失，重载列表
+        //在缓冲时重载列表，不影响观感
+        if (currentIndex == -1) refreshPlaylist(event.target);
+      } else if (event.data == YT.PlayerState.PLAYING) {
+        if (currentIndex != event.target.lastIndex && quality) {
+          //仅在第一次变为PLAYING时改变画质
+          event.target.lastIndex = currentIndex;
+          autoChangeQuality(event.target.iframe, quality);
         }
+      } else if (event.data == YT.PlayerState.UNSTARTED) {
+        //等待直播开始，这种情况下会丢失列表
+        //记录index以便确认位置
+        if (currentIndex != -1) event.target.index = currentIndex;
+      } else if (event.data == YT.PlayerState.ENDED) {
+        if (
+          event.target.getPlaylistIndex() >=
+          (event.target.getPlaylist() || []).length - 1
+        )
+          window.obsstudio.stopStreaming(); //如果所有视频均播放完毕，则停止推流
+      }
     }
 
     function onPlayerError(event) {
-        if (event.data != 2) {
-            //data为2说明参数设置错误
-            //应当只在初始化时发生（新建播放器时未指定id）
-            console.log(
-                "ID为：" +
-                event.target.getVideoData()["video_id"] +
-                "\n的视频无法播放。",
-            );
-            if (
-                event.target.getPlaylistIndex() !=
-                (event.target.getPlaylist() || []).length - 1
-            )
-                event.target.nextVideo();
-            else auto_stop_streaming(keep);
-            //window.obsstudio.stopStreaming(); //如果所有视频均播放完毕，则停止推流
-        }
+      if (event.data != 2) {
+        //data为2说明参数设置错误
+        //应当只在初始化时发生（新建播放器时未指定id）
+        console.log(
+          "ID为：" +
+            event.target.getVideoData()["video_id"] +
+            "\n的视频无法播放。",
+        );
+        if (
+          event.target.getPlaylistIndex() !=
+          (event.target.getPlaylist() || []).length - 1
+        )
+          event.target.nextVideo();
+        else window.obsstudio.stopStreaming(); //如果所有视频均播放完毕，则停止推流
+      }
     }
 
     function refreshPlaylist(player) {
-        if (id.length != 0) {
-            player.loadPlaylist(id, player.index);
-        } else if (playlist) {
-            player.loadPlaylist(
-                { list: playlist, listType: "playlist", index: player.index }
-            );
-        }
-        player.playVideo();
-        //TODO 跳转时可能出现播放列表消失的问题
+      if (id.length != 0) {
+        player.loadPlaylist(id, player.index);
+      } else if (playlist) {
+        player.loadPlaylist({
+          list: playlist,
+          listType: "playlist",
+          index: player.index,
+        });
+      }
+      player.playVideo();
     }
 
     async function autoChangeQuality(iframe, quality) {
-        let iframeDoc = iframe.contentWindow.document;
-        //模拟点击按钮设置画质
-        let buttonSettings = await waitForElement(
-            iframeDoc,
-            ".ytp-settings-button",
-        );
-        buttonSettings.click();
-        //菜单只有点击对应选项后才会生成
-        let menuSettings = await waitForElement(
-            iframeDoc,
-            ".ytp-settings-menu[data-layer]",
-        );
+      let iframeDoc = iframe.contentWindow.document;
+      //模拟点击按钮设置画质
+      let buttonSettings = await waitForElement(
+        iframeDoc,
+        ".ytp-settings-button",
+      );
+      buttonSettings.click();
+      //菜单只有点击对应选项后才会生成
+      let menuSettings = await waitForElement(
+        iframeDoc,
+        ".ytp-settings-menu[data-layer]",
+      );
 
-        let optionQuality = menuSettings.querySelector(
-            ".ytp-menuitem:last-child",
-        );
-        optionQuality.click();
-        //菜单只有点击对应选项后才会生成
-        let menuQuality = await waitForElement(iframeDoc, ".ytp-quality-menu");
-        let itemsQuality = menuQuality.querySelectorAll(
-            "span:not(.ytp-panel-title)",
-        );
+      let optionQuality = menuSettings.querySelector(
+        ".ytp-menuitem:last-child",
+      );
+      optionQuality.click();
+      //菜单只有点击对应选项后才会生成
+      let menuQuality = await waitForElement(iframeDoc, ".ytp-quality-menu");
+      let itemsQuality = menuQuality.querySelectorAll(
+        "span:not(.ytp-panel-title)",
+      );
 
-        if (quality == "max") {
-            //参数为max，切换至最高画质，点击第一项
-            itemsQuality[0].click();
+      if (quality == "max") {
+        //参数为max，切换至最高画质，点击第一项
+        itemsQuality[0].click();
+        return;
+      } else if (quality) {
+        //否则遍历
+        //XXX 如果选择的画质不存在则无效
+        for (item of itemsQuality) {
+          if (quality == item.textContent.split("p")[0]) {
+            item.click();
             return;
-        } else if (quality) {
-            //否则遍历
-            //XXX 如果选择的画质不存在则无效
-            for (item of itemsQuality) {
-                if (quality == item.textContent.split("p")[0]) {
-                    item.click();
-                    return;
-                }
-            }
+          }
         }
-        //遍历失败，点击设置按钮让菜单消失
-        buttonSettings.click();
+      }
+      //遍历失败，点击设置按钮让菜单消失
+      buttonSettings.click();
     }
 
     function waitForElement(doc, selector) {
-        return new Promise((resolve) => {
-            if (doc.querySelector(selector)) {
-                return resolve(doc.querySelector(selector));
-            }
-            const observer = new MutationObserver((mutations) => {
-                if (doc.querySelector(selector)) {
-                    observer.disconnect();
-                    resolve(doc.querySelector(selector));
-                }
-            });
-            observer.observe(doc, {
-                childList: true,
-                subtree: true,
-            });
+      return new Promise((resolve) => {
+        if (doc.querySelector(selector)) {
+          return resolve(doc.querySelector(selector));
+        }
+        const observer = new MutationObserver((mutations) => {
+          if (doc.querySelector(selector)) {
+            observer.disconnect();
+            resolve(doc.querySelector(selector));
+          }
         });
+        observer.observe(doc, {
+          childList: true,
+          subtree: true,
+        });
+      });
     }
 
     async function injectCSS(doc) {
-        let styleToInject = doc.createElement("style");
-        styleToInject.type = "text/css";
-        styleToInject.textContent =
-            //左上角标题、频道头像等内容
-            ".ytp-title, " +
-            ".ytp-title-channel, " +
-            ".ytp-title-channel-logo, " +
-            //右上角稍后观看和分享
-            ".ytp-watch-later-button, " +
-            ".ytp-share-button, " +
-            //下方按钮
-            ".ytp-cards-button, " +
-            ".ytp-prev-button, " +
-            ".ytp-next-button, " +
-            ".ytp-youtube-button, " +
-            //下方进度条
-            //".ytp-heat-map-container, " +
-            //".ytp-fine-scrubbing-container, " +
-            //".ytp-chapters-container, " +
-            //".ytp-timed-markers-container, " +
-            //结尾视频墙和卡片
-            ".videowall-endscreen, " +
-            ".ytp-ce-element, " +
-            //暂停时推荐视频
-            ".ytp-pause-overlay, " +
-            ".ytp-expand, " +
-            //右下角小头像
-            ".branding-img-container, " +
-            //等待开始
-            ".ytp-offline-slate-icon, " +
-            ".ytp-offline-slate-button, " +
-            //右上角播放列表
-            ".ytp-playlist-menu-subtitle, " +
-            ".ytp-playlist-menu-button-text, " +
-            ".ytp-playlist-menu-title-name, " +
-            //悬浮提示
-            ".ytp-tooltip, " +
-            //播放器上下两端渐变特效
-            ".ytp-gradient-top, " +
-            ".ytp-gradient-bottom " +
-            "{display: none !important;}" +
-            "\n" +
-            //等待开始界面
-            ".ytp-offline-slate-bar " +
-            "{height: 160px !important}" +
-            "\n" +
-            ".ytp-offline-slate-main-text " +
-            "{font-size: 600% !important;}" +
-            "\n" +
-            ".ytp-offline-slate-subtitle-text " +
-            "{font-size: 400% !important;}" +
-            doc.head.appendChild(styleToInject);
+      let styleToInject = doc.createElement("style");
+      styleToInject.type = "text/css";
+      styleToInject.textContent =
+        //左上角标题、频道头像等内容
+        ".ytp-title, " +
+        ".ytp-title-channel, " +
+        ".ytp-title-channel-logo, " +
+        //右上角稍后观看和分享
+        ".ytp-watch-later-button, " +
+        ".ytp-share-button, " +
+        //下方按钮
+        ".ytp-cards-button, " +
+        ".ytp-prev-button, " +
+        ".ytp-next-button, " +
+        ".ytp-youtube-button, " +
+        //下方进度条
+        ".ytp-heat-map-container, " +
+        ".ytp-fine-scrubbing-container, " +
+        ".ytp-chapters-container, " +
+        ".ytp-timed-markers-container, " +
+        //结尾视频墙和卡片
+        ".videowall-endscreen, " +
+        ".ytp-ce-element, " +
+        //暂停时推荐视频
+        ".ytp-pause-overlay, " +
+        ".ytp-expand, " +
+        //右下角小头像
+        ".branding-img-container, " +
+        //等待开始
+        ".ytp-offline-slate-icon, " +
+        ".ytp-offline-slate-button, " +
+        //右上角播放列表
+        ".ytp-playlist-menu-subtitle, " +
+        ".ytp-playlist-menu-button-text, " +
+        ".ytp-playlist-menu-title-name, " +
+        //悬浮提示
+        ".ytp-tooltip, " +
+        //播放器上下两端渐变特效
+        ".ytp-gradient-top, " +
+        ".ytp-gradient-bottom " +
+        "{display: none !important;}" +
+        "\n" +
+        //等待开始界面
+        ".ytp-offline-slate-bar " +
+        "{height: 160px !important}" +
+        "\n" +
+        ".ytp-offline-slate-main-text " +
+        "{font-size: 600% !important;}" +
+        "\n" +
+        ".ytp-offline-slate-subtitle-text " +
+        "{font-size: 400% !important;}" +
+        doc.head.appendChild(styleToInject);
     }
-</script>
+  </script>
 
-<body onload="init()">
+  <body>
     <div id="player"></div>
-</body>
-
+  </body>
 </html>
