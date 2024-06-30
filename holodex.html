@@ -178,7 +178,7 @@
                         $("#vid").text(`ID: ${data[0].id}`);
                         $("#vtitle").text(`Title: ${data[0].title}`);
                         if (ua_regex.test(ua) == true) {
-                            $('#msg').html(`Msg: 此频道正在直播或正在待机<br><br><br>　　　Simulcast Starting >>> Youtube [Quality: ${quality}]`)
+                            $('#msg').html(`Msg: 此频道正在直播或正在待机<br><br><br>　　　[Simulcast Starting >>> Youtube - Quality: ${quality}]`)
                             console.log(`${window.location.origin}/YTAutoTG.html?quality=${quality}&id=${data[0].id}`);
                             setTimeout(function () {
                                 document.getElementById('ytb').style.display = 'flex';
