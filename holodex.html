@@ -26,10 +26,11 @@
     <script>
         //https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js
         //https://fastly.jsdelivr.net/npm/moment@2.30.1/moment.min.js
-        var init;
+        var check_start;
         const urlObj = new URL(window.location.href);
         const holodex_key = urlObj.searchParams.get("key");
-        var channel_id = urlObj.searchParams.get("id");
+        const channel_id = urlObj.searchParams.get("id") || "";
+        const playlist = urlObj.searchParams.get("list") || "";
         const quality = urlObj.searchParams.get("quality");
 
         var nickname = new Map([
@@ -121,12 +122,12 @@
             ["kobo", "UCjLEmnpCNeisMxy134KPwWw"],
             ["kaela", "UCZLZ8Jjx_RN2CXloOmgTHVg"], ["ela", "UCZLZ8Jjx_RN2CXloOmgTHVg"],
         ])
-        if (channel_id.substring(0, 2) != "UC") channel_id = nickname.get(channel_id.toLowerCase());
 
         var time = "";
 
         //倒计时
         var count = 4
+        var counter;
         function timer() {
             count = count - 1;
             if (count < 0) {
@@ -154,38 +155,37 @@
         }
 
         //检测直播
-        function checker() {
-            if (!channel_id) {
-                $('#msg').text('Msg: 未提供ID');
+        function checker(pid) {
+            if (!pid) {
+                //$('#msg').text('Msg: 未提供ID');
                 return 0;
             }
-            
+
             if (!holodex_key) {
                 $('#msg').text('Msg: 未提供Holodex密钥')
                 return 0;
             }
             $.ajax({
-                url: `https://holodex.net/api/v2/live?lang=zh&channel_id=${channel_id}&max_upcoming_hours=12`,
+                url: `https://holodex.net/api/v2/live?lang=zh&channel_id=${pid}&max_upcoming_hours=12`,
                 type: `get`,
-                headers: { "X-APIKEY": holodex_key},
+                headers: { "X-APIKEY": holodex_key },
                 success: function (data) {
                     time = `${moment().utcOffset("+08:00").format("YYYY-M-D HH:mm:ss")}`;
                     $("#time").text(`Time: ${time}`);
-                    if (data.length == 0) $('#msg').text('未检测到正在直播或正在待机')
+                    if (data.length == 0) $('#msg').text('此频道暂无直播或待机')
                     if (data.length != 0) {
                         clearInterval(init); //停止检查
                         $("#vid").text(`ID: ${data[0].id}`);
                         $("#vtitle").text(`Title: ${data[0].title}`);
                         if (ua_regex.test(ua) == true) {
-                            $('#msg').html(`Msg: 已检测到目标频道正在直播或正在待机<br><br>Simulcast Starting >>> Youtube [Quality: ${quality}]`)
+                            $('#msg').html(`Msg: 此频道正在直播或正在待机<br><br><br>　　　Simulcast Starting >>> Youtube [Quality: ${quality}]`)
                             console.log(`${window.location.origin}/YTAutoTG.html?quality=${quality}&id=${data[0].id}`);
-                            let counter = setInterval(timer, 1000);
                             setTimeout(function () {
                                 document.getElementById('ytb').style.display = 'flex';
                                 $('#ytb').attr('src', `https://you-tube-auto.pages.dev/youtube.html?quality=${quality}&id=${data[0].id}`);
                                 //测试 https://you-tube-auto.pages.dev/youtube.html?quality=${quality}&id=RDLEr8Z1tCSmk
                                 //https://you-tube-auto.pages.dev/youtube.html?quality=${quality}&id=${data[0].id}
-                            }, 3000)
+                            }, 2000)
                         }
                         if (ua_regex.test(ua) != true) {
                             $('#msg').html("Msg: 请使用OBS访问");
@@ -201,7 +201,44 @@
                 }
             })
         }
-        init = setInterval(checker, 60000)
+
+        //直接跳转
+        function yt_auto_redirect(pid) {
+            $("#vid").text(`ID: ${pid}${playlist}`);
+            $('#msg').html(`Msg: 已读取视频号或视频列表<br><br><br>　　　[Simulcast Starting >>> Youtube - Quality: ${quality}]`)
+            setTimeout(function () {
+                document.getElementById('ytb').style.display = 'flex';
+                $('#ytb').attr('src', `https://you-tube-auto.pages.dev/youtube.html?quality=${quality}&id=${pid}&list=${playlist}`)
+            }, 2000)
+        }
+
+        function init() {
+            if (!channel_id && !playlist) {
+                $('#msg').text('Msg: 未提供ID');
+                return;
+            }
+            let pid;
+            setTimeout(f = function () {
+                if (playlist) {
+                    yt_auto_redirect(channel_id)
+                }
+                if (nickname.has(channel_id)) {
+                    pid = nickname.get(channel_id.toLowerCase())
+                    checker(pid);
+                    check_start = setInterval(checker, 60000, pid)
+                    return;
+                }
+                else if (channel_id && channel_id.substring(0, 2) == "UC") {
+                    checker(channel_id);
+                    check_start = setInterval(checker, 60000, channel_id)
+                    return;
+                }
+                else {
+                    yt_auto_redirect(channel_id)
+                }
+            }, 1000)
+        }
+        init();
     </script>
 
 </body>
