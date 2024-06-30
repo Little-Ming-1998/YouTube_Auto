@@ -174,7 +174,7 @@
                     $("#time").text(`Time: ${time}`);
                     if (data.length == 0) $('#msg').text('此频道暂无直播或待机')
                     if (data.length != 0) {
-                        clearInterval(init); //停止检查
+                        clearInterval(check_start); //停止检查
                         $("#vid").text(`ID: ${data[0].id}`);
                         $("#vtitle").text(`Title: ${data[0].title}`);
                         if (ua_regex.test(ua) == true) {
