@@ -172,7 +172,7 @@
                 success: function (data) {
                     time = `${moment().utcOffset("+08:00").format("YYYY-M-D HH:mm:ss")}`;
                     $("#time").text(`Time: ${time}`);
-                    if (data.length == 0) $('#msg').text('此频道暂无直播或待机')
+                    if (data.length == 0) $('#msg').text('Msg: 此频道暂无直播或待机')
                     if (data.length != 0) {
                         clearInterval(check_start); //停止检查
                         $("#vid").text(`ID: ${data[0].id}`);
