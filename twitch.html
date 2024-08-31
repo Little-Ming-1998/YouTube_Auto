@@ -33,6 +33,11 @@
     };
     var player = new Twitch.Player("twitch_player", options);
 
+    player.addEventListener(Twitch.Player.Ready, () => {
+        player.iframe = document.getElementById("twitch_player");
+        injectCSS(player.iframe.contentDocument)
+    })
+
     player.addEventListener(Twitch.Player.ENDED, () => {
         console.log(`视频已停止`);
         window.obsstudio.stopStreaming();
@@ -58,5 +63,11 @@
         if(!quality) console.log(`未指定画质`);
         console.log(qStr);
     });
+
+    async function injectCSS(doc){
+        let styleToInject = doc.createElement("style");
+        styleToInject.type = "text/css";
+        styleToInject.textContent = ".Layout-sc-1xcs6mc-0.iXkPaN.top-bar {display:none !important;} "
+    }
 </script>
 </html>
