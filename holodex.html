@@ -136,6 +136,19 @@
                 return;
             }
         }
+
+        //播放页面检测
+        function start_fail_check() {
+            setTimeout(w = function () {
+                if ($("#ytb").contents().find("#player").attr("title") == 'YouTube video player') {
+                    //$('#msg').html(`Msg: 播放器加载失败，正在重载`);
+                    init();
+                }
+                else {
+                    //$('#msg').html(`Msg: 播放器已成功加载`);
+                }
+            }, 10000)
+        }
         //直播结束
         function play_end() {
             time = `${moment().utcOffset("+08:00").format("YYYY-M-D HH:mm:ss")}`;
@@ -185,6 +198,7 @@
                                 $('#ytb').attr('src', `https://you-tube-auto.pages.dev/youtube.html?quality=${quality}&id=${data[0].id}`);
                                 //测试 https://you-tube-auto.pages.dev/youtube.html?quality=${quality}&id=RDLEr8Z1tCSmk
                                 //https://you-tube-auto.pages.dev/youtube.html?quality=${quality}&id=${data[0].id}
+                                start_fail_check();
                             }, 2000)
                         }
                         if (ua_regex.test(ua) != true) {
@@ -209,6 +223,7 @@
             setTimeout(function () {
                 document.getElementById('ytb').style.display = 'flex';
                 $('#ytb').attr('src', `https://you-tube-auto.pages.dev/youtube.html?quality=${quality}&id=${pid}&list=${playlist}`)
+                start_fail_check();
             }, 2000)
         }
 
