@@ -132,6 +132,7 @@
           (event.target.getPlaylist() || []).length - 1
         )
           window.obsstudio.stopStreaming(); //如果所有视频均播放完毕，则停止推流
+          window.obsstudio.stopRecording();
       }
     }
 
@@ -149,7 +150,10 @@
           (event.target.getPlaylist() || []).length - 1
         )
           event.target.nextVideo();
-        else window.obsstudio.stopStreaming(); //如果所有视频均播放完毕，则停止推流
+        else {
+          window.obsstudio.stopStreaming(); 
+          window.obsstudio.stopRecording();
+             }//如果所有视频均播放完毕，则停止推流
       }
     }
 
