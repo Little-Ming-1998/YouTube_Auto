@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html>
   <meta charset="utf-8" />
@@ -15,7 +16,6 @@
     #player {
       height: 100%;
       width: 100%;
-      display: none;
     }
   </style>
   <script>
@@ -41,7 +41,6 @@
       : [];
     const playlist = urlObj.searchParams.get("list") || null;
     let quality = urlObj.searchParams.get("quality");
-    if (quality != null) quality = quality.split("p")[0];
 
     //新建嵌入式播放器
     function onYouTubeIframeAPIReady() {
@@ -72,7 +71,6 @@
           autoplay: 1,
           controls: 1,
           rel: 0,
-          modestbranding: 1,
           fs: 0,
         },
         events: {
@@ -89,20 +87,22 @@
     function onPlayerReady(event) {
       //导入播放列表
       //XXX 支持同时使用id和list参数
-      event.target.loadPlaylist();
-      if (id.length != 0) {
-        setTimeout(function(){ event.target.loadPlaylist({ playlist: id }) }, 500);
-      } else if (playlist) {
-        setTimeout(function(){ event.target.loadPlaylist({ list: playlist, listType: "playlist" }) }, 500);
-      }
-
       event.target.iframe = document.getElementById("player"); //获取页面元素，方便操作
       injectCSS(event.target.iframe.contentDocument); //注入CSS样式
+      event.target.loadPlaylist();
+      if (id.length != 0) {
+        setTimeout(function () {
+          event.target.loadPlaylist({ playlist: id });
+        }, 500);
+      } else if (playlist) {
+        setTimeout(function () {
+          event.target.loadPlaylist({ list: playlist, listType: "playlist" });
+        }, 500);
+      }
       event.target.playVideo(); //开始播放
     }
 
     function onPlayerStateChange(event) {
-      if (event.target.index != -1) event.target.iframe.style.display = "block";
       const currentIndex = event.target.getPlaylistIndex();
       console.log(
         "status:" +
@@ -114,15 +114,23 @@
       );
       if (event.data == YT.PlayerState.BUFFERING) {
         //currentIndex为-1说明列表丢失，重载列表
-        //在缓冲时重载列表，不影响观感
-        if (currentIndex == -1) refreshPlaylist(event.target);
+        if (currentIndex == -1) {
+          refreshPlaylist(event.target);
+        }
       } else if (event.data == YT.PlayerState.PLAYING) {
-        if (currentIndex != event.target.lastIndex && quality) {
+        if (currentIndex != event.target.lastIndex) {
           //仅在第一次变为PLAYING时改变画质
           event.target.lastIndex = currentIndex;
           autoChangeQuality(event.target.iframe, quality);
         }
       } else if (event.data == YT.PlayerState.UNSTARTED) {
+        //隐藏UI
+        setElementStyle(
+          event.target.iframe.contentWindow.document,
+          "player-controls",
+          "opacity",
+          "0",
+        );
         //等待直播开始，这种情况下会丢失列表
         //记录index以便确认位置
         if (currentIndex != -1) event.target.index = currentIndex;
@@ -132,28 +140,26 @@
           (event.target.getPlaylist() || []).length - 1
         )
           window.obsstudio.stopStreaming(); //如果所有视频均播放完毕，则停止推流
-          window.obsstudio.stopRecording();
       }
     }
 
     function onPlayerError(event) {
+      console.log("player error");
+      console.log(event.data);
       if (event.data != 2) {
         //data为2说明参数设置错误
         //应当只在初始化时发生（新建播放器时未指定id）
-        console.log(
-          "ID为：" +
-            event.target.getVideoData()["video_id"] +
-            "\n的视频无法播放。",
-        );
+        // console.log(
+        //   "ID为：" +
+        //     event.target.getVideoData()["video_id"] +
+        //     "\n的视频无法播放。",
+        // );
         if (
           event.target.getPlaylistIndex() !=
           (event.target.getPlaylist() || []).length - 1
-        )
+        ) {
           event.target.nextVideo();
-        else {
-          window.obsstudio.stopStreaming(); 
-          window.obsstudio.stopRecording();
-             }//如果所有视频均播放完毕，则停止推流
+        } else window.obsstudio.stopStreaming(); //如果所有视频均播放完毕，则停止推流
       }
     }
 
@@ -170,124 +176,150 @@
       player.playVideo();
     }
 
+    function setElementStyle(doc, id, property, value, priority = null) {
+      let el = doc.getElementById(id);
+      if (el) {
+        if (priority) el.style.setProperty(property, value, priority);
+        else el.style.setProperty(property, value);
+      }
+    }
+
     async function autoChangeQuality(iframe, quality) {
-      let iframeDoc = iframe.contentWindow.document;
+      function waitForElement(doc, selector) {
+        return new Promise((resolve) => {
+          if (doc.querySelector(selector)) {
+            return resolve(doc.querySelector(selector));
+          }
+          const observer = new MutationObserver((mutations) => {
+            if (doc.querySelector(selector)) {
+              observer.disconnect();
+              resolve(doc.querySelector(selector));
+            }
+          });
+          observer.observe(doc, {
+            childList: true,
+            subtree: true,
+          });
+        });
+      }
+
+      function sleep(time) {
+        return new Promise((resolve) => setTimeout(resolve, time));
+      }
+
+      const iframeDoc = iframe.contentWindow.document;
+
+      setElementStyle(iframeDoc, "bottom-sheet-wrapper", "opacity", "0");
+
       //模拟点击按钮设置画质
       let buttonSettings = await waitForElement(
         iframeDoc,
-        ".ytp-settings-button",
-      );
-      buttonSettings.click();
-      //菜单只有点击对应选项后才会生成
-      let menuSettings = await waitForElement(
-        iframeDoc,
-        ".ytp-settings-menu[data-layer]",
+        ".player-settings-icon",
       );
 
-      let optionQuality = menuSettings.querySelector(
-        ".ytp-menuitem:last-child",
+      buttonSettings.click(); //菜单只有点击对应选项后才会生成
+      let menuSettings = await waitForElement(
+        iframeDoc,
+        ".yt-spec-bottom-sheet-layout__bottom-sheet-content",
       );
-      optionQuality.click();
-      //菜单只有点击对应选项后才会生成
-      let menuQuality = await waitForElement(iframeDoc, ".ytp-quality-menu");
-      let itemsQuality = menuQuality.querySelectorAll(
-        "span:not(.ytp-panel-title)",
+
+      let options = menuSettings.querySelectorAll(
+        ".yt-list-item-view-model__title",
       );
+      for (option of options) {
+        if (option.textContent.trim() == "画质") option.click(); //菜单只有点击对应选项后才会生成
+      }
+
+      let oldInnerText = menuSettings.innerText;
+      while (true) {
+        menuSettings = iframeDoc.querySelector(
+          ".yt-spec-bottom-sheet-layout__bottom-sheet-content",
+        );
+        if (menuSettings.innerText != oldInnerText) {
+          options = menuSettings.querySelectorAll(
+            ".yt-list-item-view-model__title",
+          );
+          if (
+            options[options.length - 1].textContent !== undefined &&
+            options[options.length - 1].textContent !== null &&
+            options[options.length - 1].textContent.includes("自动")
+          )
+            break;
+          oldInnerText = menuSettings.innerText;
+        }
+        await sleep(100);
+      }
 
       if (quality == "max") {
         //参数为max，切换至最高画质，点击第一项
-        itemsQuality[0].click();
-        return;
-      } else if (quality) {
-        //否则遍历
-        //XXX 如果选择的画质不存在则无效
-        for (item of itemsQuality) {
-          if (quality == item.textContent.split("p")[0]) {
-            item.click();
-            return;
+        options[0].click();
+      } else {
+        let flag = false;
+        if (quality) {
+          //否则遍历
+          //XXX 如果选择的画质不存在则无效
+          for (item of options) {
+            if (
+              quality == item.textContent ||
+              quality == item.textContent.split("p")[0]
+            ) {
+              item.click();
+              flag = true;
+              break;
+            }
           }
         }
+        //遍历失败，改为自动画质
+        if (!flag) options[options.length - 1].click();
       }
-      //遍历失败，点击设置按钮让菜单消失
-      buttonSettings.click();
-    }
 
-    function waitForElement(doc, selector) {
-      return new Promise((resolve) => {
-        if (doc.querySelector(selector)) {
-          return resolve(doc.querySelector(selector));
-        }
-        const observer = new MutationObserver((mutations) => {
-          if (doc.querySelector(selector)) {
-            observer.disconnect();
-            resolve(doc.querySelector(selector));
-          }
-        });
-        observer.observe(doc, {
-          childList: true,
-          subtree: true,
-        });
-      });
+      await sleep(500);
+      setElementStyle(iframeDoc, "player-controls", "opacity", "1");
+      setElementStyle(iframeDoc, "bottom-sheet-wrapper", "opacity", "1");
     }
 
     async function injectCSS(doc) {
       let styleToInject = doc.createElement("style");
       styleToInject.type = "text/css";
       styleToInject.textContent =
+        //无法播放时显示的错误界面
+        ".ytp-error, " +
+        //UI
+        "#player-controls " +
+        //不显示（仍然可以点击）
+        "{opacity: 0;}" +
+        "\n" +
         //左上角标题、频道头像等内容
-        ".ytp-title, " +
-        ".ytp-title-channel, " +
-        ".ytp-title-channel-logo, " +
-        //右上角稍后观看和分享
-        ".ytp-watch-later-button, " +
-        ".ytp-share-button, " +
-        //下方按钮
-        ".ytp-cards-button, " +
-        ".ytp-prev-button, " +
-        ".ytp-next-button, " +
-        ".ytp-youtube-button, " +
-        //下方进度条
-        ".ytp-heat-map-container, " +
-        ".ytp-fine-scrubbing-container, " +
-        ".ytp-chapters-container, " +
-        ".ytp-timed-markers-container, " +
-        //结尾视频墙和卡片
-        ".videowall-endscreen, " +
-        ".ytp-ce-element, " +
-        //暂停时推荐视频
-        ".ytp-pause-overlay, " +
-        ".ytp-expand, " +
-        //右下角小头像
-        ".branding-img-container, " +
-        //等待开始
-        ".ytp-offline-slate-icon, " +
-        ".ytp-offline-slate-button, " +
-        //右上角播放列表
-        ".ytp-playlist-menu-subtitle, " +
-        ".ytp-playlist-menu-button-text, " +
-        ".ytp-playlist-menu-title-name, " +
-        //悬浮提示
-        ".ytp-tooltip, " +
-        //播放器上下两端渐变特效
-        ".ytp-gradient-top, " +
-        ".ytp-gradient-bottom " +
+        "embedded-player-video-details, " +
+        //左下角稍后观看和分享
+        ".action-menu-engagement-buttons-wrapper, " +
+        //右下方更多视频
+        ".fullscreen-watch-next-entrypoint-wrapper, " +
+        //右下角“在YouTube观看”
+        ".watch-on-youtube-button-wrapper, " +
+        //播放器渐变特效
+        ".player-controls-background-container, " +
+        //待机界面按钮
+        ".ytp-offline-slate-button, .ytp-offline-slate-icon, " +
+        //开关字幕的提示
+        ".hug-toast " +
+        //隐藏
         "{display: none !important;}" +
         "\n" +
-        //等待开始界面
+        //待机界面字号
         ".ytp-offline-slate-bar " +
-        "{height: 200px !important}" +
+        "{height: 160px !important;}" +
         "\n" +
         ".ytp-offline-slate-main-text " +
-        "{font-size: 600% !important;}" +
+        "{font-size: 500% !important;}" +
         "\n" +
         ".ytp-offline-slate-subtitle-text " +
-        "{font-size: 400% !important;}" +
-        doc.head.appendChild(styleToInject);
+        "{font-size: 300% !important;}";
+      doc.head.appendChild(styleToInject);
     }
   </script>
 
   <body>
     <div id="player"></div>
-    <div style="font-size: 50px; color: white; font-family: 'SimHei';">正在连接视频信号...</div>
   </body>
 </html>
