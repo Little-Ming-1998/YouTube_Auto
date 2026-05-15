@@ -220,11 +220,11 @@
       buttonSettings.click(); //菜单只有点击对应选项后才会生成
       let menuSettings = await waitForElement(
         iframeDoc,
-        ".yt-spec-bottom-sheet-layout__bottom-sheet-content",
+        "#content-wrapper",
       );
 
       let options = menuSettings.querySelectorAll(
-        ".yt-list-item-view-model__title",
+        ".ytListItemViewModelTitle",
       );
       for (option of options) {
         if (option.textContent.trim() == "画质") option.click(); //菜单只有点击对应选项后才会生成
@@ -233,11 +233,11 @@
       let oldInnerText = menuSettings.innerText;
       while (true) {
         menuSettings = iframeDoc.querySelector(
-          ".yt-spec-bottom-sheet-layout__bottom-sheet-content",
+          "#content-wrapper",
         );
         if (menuSettings.innerText != oldInnerText) {
           options = menuSettings.querySelectorAll(
-            ".yt-list-item-view-model__title",
+            ".ytListItemViewModelTitle",
           );
           if (
             options[options.length - 1].textContent !== undefined &&
